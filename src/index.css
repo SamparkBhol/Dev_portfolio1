@@ -1,0 +1,110 @@
+
+    @tailwind base;
+    @tailwind components;
+    @tailwind utilities;
+
+    :root {
+      --background: 0 0% 3.9%; /* Almost black */
+      --foreground: 0 0% 98%; /* White */
+
+      --card: 222.2 84% 4.9%; /* Dark blue, almost black */
+      --card-foreground: 210 40% 98%; /* Light gray */
+
+      --popover: 222.2 84% 4.9%;
+      --popover-foreground: 210 40% 98%;
+
+      --primary: 210 40% 98%; /* Light gray / White */
+      --primary-foreground: 222.2 47.4% 11.2%; /* Dark blue */
+      
+      --secondary: 217.2 32.6% 17.5%; /* Darker blue */
+      --secondary-foreground: 210 40% 98%; /* Light gray */
+
+      --muted: 217.2 32.6% 17.5%;
+      --muted-foreground: 215 20.2% 65.1%; /* Lighter gray for muted text */
+
+      --accent: 217.2 32.6% 17.5%;
+      --accent-foreground: 210 40% 98%;
+
+      --destructive: 0 62.8% 30.6%; /* Dark red */
+      --destructive-foreground: 0 0% 98%;
+
+      --border: 217.2 32.6% 17.5%;
+      --input: 217.2 32.6% 17.5%;
+      --ring: 210 40% 98%; /* Ring color for focus, light gray */
+
+      --radius: 0.75rem;
+    }
+
+    .dark {
+      --background: 0 0% 3.9%;
+      --foreground: 0 0% 98%;
+
+      --card: 222.2 84% 4.9%;
+      --card-foreground: 210 40% 98%;
+
+      --popover: 222.2 84% 4.9%;
+      --popover-foreground: 210 40% 98%;
+
+      --primary: 210 40% 98%;
+      --primary-foreground: 222.2 47.4% 11.2%;
+      
+      --secondary: 217.2 32.6% 17.5%;
+      --secondary-foreground: 210 40% 98%;
+
+      --muted: 217.2 32.6% 17.5%;
+      --muted-foreground: 215 20.2% 65.1%;
+
+      --accent: 217.2 32.6% 17.5%;
+      --accent-foreground: 210 40% 98%;
+
+      --destructive: 0 72.2% 50.6%;
+      --destructive-foreground: 0 0% 98%;
+
+      --border: 217.2 32.6% 17.5%;
+      --input: 217.2 32.6% 17.5%;
+      --ring: 210 40% 98%;
+    }
+    
+    body {
+      @apply bg-background text-foreground font-sans;
+      scroll-behavior: smooth;
+    }
+
+    .glassmorphism {
+      @apply bg-glassmorphism-gradient backdrop-filter backdrop-blur-md shadow-glass border border-white/20;
+    }
+
+    .section-padding {
+      @apply py-16 md:py-24 px-4 md:px-8;
+    }
+
+    .section-title {
+      @apply text-4xl md:text-5xl font-orbitron font-bold mb-12 text-center bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-500 to-red-500;
+    }
+
+    .terminal-input::placeholder {
+      color: hsl(var(--muted-foreground));
+    }
+    .terminal-input {
+      color: hsl(var(--foreground));
+    }
+
+    /* Custom scrollbar for a more modern feel */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: hsl(var(--background));
+    }
+    ::-webkit-scrollbar-thumb {
+      background: hsl(var(--primary) / 0.5);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: hsl(var(--primary));
+    }
+
+    canvas {
+      display: block; /* Fixes small gap below canvas */
+    }
+  
