@@ -35,7 +35,7 @@
               &copy; {new Date().getFullYear()} {personalInfo.name}. All rights reserved.
             </p>
             <p className="text-xs text-gray-600 mt-1">
-              Built with React, TailwindCSS, Three.js and 💜 by Hostinger Horizons.
+              Built with React, TailwindCSS, Three.js with 💜 Sampark.
             </p>
           </div>
         </footer>

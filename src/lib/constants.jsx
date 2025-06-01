@@ -59,7 +59,7 @@ import React from 'react';
         role: 'AI Intern',
         company: 'CSM Technologies',
         location: 'Bhubaneswar, India (Onsite)',
-        duration: 'May 2025 – July 2025 (Anticipated)',
+        duration: 'May 2025 – July 2025',
         responsibilities: [
           'Worked with NLP, Langchain, and LLM development, including model integration.',
           'Gained introduction to Langflow and Generative AI concepts.',
@@ -131,7 +131,7 @@ import React from 'react';
       {
         name: 'roguemaze',
         description: 'An NPM package for generating procedural mazes suitable for roguelike games. Offers various algorithms (e.g., Recursive Backtracker, Prim\'s Algorithm) and customization options for maze dimensions and complexity.',
-        link: 'https://www.npmjs.com/package/roguemaze', 
+        link: 'https://www.npmjs.com/package/cli-legend', 
         icon: <Package className="w-8 h-8 text-blue-500" />
       }
     ];
@@ -157,7 +157,7 @@ import React from 'react';
       programmingLanguages: ['Python', 'JavaScript', 'HTML', 'CSS', 'C', 'C++', 'R', 'Golang', 'React', 'Solidity'],
       frameworksTechnologies: ['LangChain', 'Flask', 'Flutter', 'Godot', 'Orange', 'Unreal Engine', 'Buildbox', 'Three.js', 'React Three Fiber', 'Next.js'],
       databasesStorage: ['PostgreSQL', 'MySQL', 'Firebase', 'MongoDB'],
-      developmentTools: ['Git', 'GitLab', 'Ollama', 'Hugging Face', 'Kivy', 'Qiskit', 'PennyLane', 'Docker', 'Kubernetes'],
+      developmentTools: ['Git', 'GitLab', 'Ollama', 'Hugging Face', 'Kivy', 'Qiskit', 'PennyLane', 'Docker', 'Kubernetes', 'AWS'],
     };
 
     export const certifications = [
@@ -185,7 +185,7 @@ import React from 'react';
       {
         title: 'NeuroSymbolic AI : A view',
         link: 'https://medium.com/@samparkbhol2005/neurosymbolic-ai-a-view-328617188529',
-        description: 'Exploring the融合 of neural networks and symbolic reasoning in AI.',
+        description: 'Exploring the integration of neural networks and symbolic reasoning in AI.',
         imageUrl: 'https://miro.medium.com/v2/resize:fit:1400/format:webp/1*8F0R2QJM9R4Y2Y7Z2J9A_w.jpeg', //sample image URL - !reminder change it later
         icon: <Brain className="w-8 h-8 text-purple-400" />
       },
@@ -224,7 +224,7 @@ import React from 'react';
       {
         organization: 'Association of Energy Engineers - VIT Vellore Student Chapter (AEE-VIT)',
         role: 'Active Member & Event Participant',
-        duration: 'Ongoing',
+        duration: 'Completed',
         description: 'Engaged in events and activities to understand various energy sources, renewable energy technologies, and energy management principles. Contributed to discussions on sustainable energy solutions.',
         icon: <Lightbulb className="w-8 h-8 text-yellow-400" />,
         imageUrl: 'https://images.unsplash.com/photo-1497435334942-80e30ee5e0e4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80' // Reminder 2
