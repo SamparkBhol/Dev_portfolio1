@@ -1,399 +1,384 @@
-"use client"
+import React, { useRef, useMemo, useEffect, useState, Suspense } from 'react';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { OrbitControls, Stars, Text3D, Center, Sparkles } from '@react-three/drei';
+import * as THREE from 'three';
 
-import React, { useRef, useMemo } from "react"
-import { Canvas, useFrame } from "@react-three/fiber"
-import { Stars } from "@react-three/drei"
-import * as THREE from "three"
-
+// Retro Grid Floor
 const RetroGrid = React.memo(() => {
-  const gridRef = useRef()
-
-  useFrame((state, delta) => {
+  const gridRef = useRef();
+  
+  useFrame((state) => {
     if (gridRef.current) {
-      gridRef.current.position.z += delta * 3
-      if (gridRef.current.position.z > 5) {
-        gridRef.current.position.z = -20
-      }
+      gridRef.current.position.z = (state.clock.elapsedTime * 2) % 4 - 2;
     }
-  })
+  });
 
-  const gridGeometry = useMemo(() => {
-    const geometry = new THREE.BufferGeometry()
-    const vertices = []
-    const size = 40
-    const divisions = 40
-
+  const gridLines = useMemo(() => {
+    const lines = [];
+    const size = 20;
+    const divisions = 20;
+    const step = size / divisions;
+    
     // Create grid lines
     for (let i = 0; i <= divisions; i++) {
-      const pos = (i / divisions) * size - size / 2
-
-      // Horizontal lines
-      vertices.push(-size / 2, pos, 0)
-      vertices.push(size / 2, pos, 0)
-
-      // Vertical lines
-      vertices.push(pos, -size / 2, 0)
-      vertices.push(pos, size / 2, 0)
-    }
-
-    geometry.setAttribute("position", new THREE.Float32BufferAttribute(vertices, 3))
-    return geometry
-  }, [])
-
-  return (
-    <group ref={gridRef} position={[0, -5, -15]} rotation={[-Math.PI / 2, 0, 0]}>
-      <lineSegments geometry={gridGeometry}>
-        <lineBasicMaterial color="#00ffff" transparent opacity={0.4} />
-      </lineSegments>
-    </group>
-  )
-})
-
-const RetroSpaceship = React.memo(() => {
-  const shipRef = useRef()
-
-  useFrame((state, delta) => {
-    if (shipRef.current) {
-      shipRef.current.position.x = Math.sin(state.clock.elapsedTime * 0.8) * 2
-      shipRef.current.position.y = Math.cos(state.clock.elapsedTime * 0.6) * 1
-      shipRef.current.rotation.z = Math.sin(state.clock.elapsedTime * 0.8) * 0.3
-    }
-  })
-
-  return (
-    <group ref={shipRef} position={[0, 0, 2]}>
-      {/* Main body */}
-      <mesh>
-        <coneGeometry args={[0.4, 1.5, 4]} />
-        <meshBasicMaterial color="#ff00ff" wireframe />
-      </mesh>
-
-      {/* Wings */}
-      <mesh position={[-0.6, 0, 0.2]}>
-        <boxGeometry args={[1, 0.1, 0.2]} />
-        <meshBasicMaterial color="#00ffff" wireframe />
-      </mesh>
-      <mesh position={[0.6, 0, 0.2]}>
-        <boxGeometry args={[1, 0.1, 0.2]} />
-        <meshBasicMaterial color="#00ffff" wireframe />
-      </mesh>
-
-      {/* Engine glow */}
-      <mesh position={[0, 0, -0.8]}>
-        <sphereGeometry args={[0.15, 8, 8]} />
-        <meshBasicMaterial color="#ffff00" />
-      </mesh>
-    </group>
-  )
-})
-
-const RetroAsteroids = React.memo(() => {
-  const asteroidsRef = useRef()
-
-  const asteroids = useMemo(() => {
-    const temp = []
-    for (let i = 0; i < 12; i++) {
-      temp.push({
-        position: [(Math.random() - 0.5) * 15, (Math.random() - 0.5) * 10, -Math.random() * 25 - 5],
-        rotation: [Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI],
-        scale: Math.random() * 0.8 + 0.4,
-        speed: Math.random() * 3 + 1,
-        rotSpeed: (Math.random() - 0.5) * 0.03,
-      })
-    }
-    return temp
-  }, [])
-
-  useFrame((state, delta) => {
-    if (asteroidsRef.current) {
-      asteroidsRef.current.children.forEach((asteroid, i) => {
-        asteroid.position.z += asteroids[i].speed * delta
-        asteroid.rotation.x += asteroids[i].rotSpeed
-        asteroid.rotation.y += asteroids[i].rotSpeed * 0.7
-
-        if (asteroid.position.z > 8) {
-          asteroid.position.z = -25
-          asteroid.position.x = (Math.random() - 0.5) * 15
-          asteroid.position.y = (Math.random() - 0.5) * 10
-        }
-      })
-    }
-  })
-
-  return (
-    <group ref={asteroidsRef}>
-      {asteroids.map((asteroid, i) => (
-        <mesh key={i} position={asteroid.position} rotation={asteroid.rotation} scale={asteroid.scale}>
-          <icosahedronGeometry args={[1, 0]} />
-          <meshBasicMaterial color="#ff6600" wireframe />
+      const x = -size/2 + i * step;
+      lines.push(
+        <mesh key={`v${i}`} position={[x, 0, 0]}>
+          <boxGeometry args={[0.02, 0.1, size]} />
+          <meshBasicMaterial color="#ff00ff" />
         </mesh>
-      ))}
-    </group>
-  )
-})
-
-const RetroEnemies = React.memo(() => {
-  const enemiesRef = useRef()
-
-  const enemies = useMemo(() => {
-    const temp = []
-    for (let i = 0; i < 6; i++) {
-      temp.push({
-        position: [(Math.random() - 0.5) * 12, (Math.random() - 0.5) * 8, -Math.random() * 20 - 10],
-        speed: Math.random() * 2 + 1,
-        phase: Math.random() * Math.PI * 2,
-      })
+      );
     }
-    return temp
-  }, [])
-
-  useFrame((state, delta) => {
-    if (enemiesRef.current) {
-      enemiesRef.current.children.forEach((enemy, i) => {
-        enemy.position.z += enemies[i].speed * delta
-        enemy.position.x += Math.sin(state.clock.elapsedTime * 2 + enemies[i].phase) * delta * 0.8
-        enemy.rotation.y += delta * 3
-
-        if (enemy.position.z > 8) {
-          enemy.position.z = -20
-          enemy.position.x = (Math.random() - 0.5) * 12
-          enemy.position.y = (Math.random() - 0.5) * 8
-        }
-      })
-    }
-  })
-
-  return (
-    <group ref={enemiesRef}>
-      {enemies.map((enemy, i) => (
-        <group key={i} position={enemy.position}>
-          <mesh>
-            <octahedronGeometry args={[0.5, 0]} />
-            <meshBasicMaterial color="#ff0040" wireframe />
-          </mesh>
-          <mesh position={[-0.4, 0, 0]}>
-            <boxGeometry args={[0.6, 0.1, 0.1]} />
-            <meshBasicMaterial color="#ff0040" wireframe />
-          </mesh>
-          <mesh position={[0.4, 0, 0]}>
-            <boxGeometry args={[0.6, 0.1, 0.1]} />
-            <meshBasicMaterial color="#ff0040" wireframe />
-          </mesh>
-        </group>
-      ))}
-    </group>
-  )
-})
-
-const RetroLasers = React.memo(() => {
-  const lasersRef = useRef()
-
-  const lasers = useMemo(() => {
-    const temp = []
-    for (let i = 0; i < 15; i++) {
-      temp.push({
-        position: [(Math.random() - 0.5) * 8, (Math.random() - 0.5) * 6, Math.random() * 15 - 5],
-        speed: Math.random() * 10 + 5,
-        isPlayerLaser: Math.random() > 0.4,
-      })
-    }
-    return temp
-  }, [])
-
-  useFrame((state, delta) => {
-    if (lasersRef.current) {
-      lasersRef.current.children.forEach((laser, i) => {
-        if (lasers[i].isPlayerLaser) {
-          laser.position.z -= lasers[i].speed * delta
-        } else {
-          laser.position.z += lasers[i].speed * delta
-        }
-
-        if (laser.position.z > 10 || laser.position.z < -10) {
-          laser.position.x = (Math.random() - 0.5) * 8
-          laser.position.y = (Math.random() - 0.5) * 6
-          laser.position.z = lasers[i].isPlayerLaser ? 2 : -10
-        }
-      })
-    }
-  })
-
-  return (
-    <group ref={lasersRef}>
-      {lasers.map((laser, i) => (
-        <mesh key={i} position={laser.position}>
-          <cylinderGeometry args={[0.03, 0.03, 0.8]} />
-          <meshBasicMaterial color={laser.isPlayerLaser ? "#00ff00" : "#ff0000"} />
+    
+    for (let i = 0; i <= divisions; i++) {
+      const z = -size/2 + i * step;
+      lines.push(
+        <mesh key={`h${i}`} position={[0, 0, z]}>
+          <boxGeometry args={[size, 0.1, 0.02]} />
+          <meshBasicMaterial color="#ff00ff" />
         </mesh>
-      ))}
+      );
+    }
+    
+    return lines;
+  }, []);
+
+  return (
+    <group ref={gridRef} position={[0, -3, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+      {gridLines}
     </group>
-  )
-})
+  );
+});
 
-const RetroExplosions = React.memo(() => {
-  const explosionsRef = useRef()
-
-  const explosions = useMemo(() => {
-    const temp = []
+// Floating Retro Shapes
+const RetroShapes = React.memo(() => {
+  const groupRef = useRef();
+  
+  const shapes = useMemo(() => {
+    const temp = [];
+    const colors = ['#ff00ff', '#00ffff', '#ffff00', '#ff0080', '#80ff00'];
+    
     for (let i = 0; i < 8; i++) {
+      const x = (Math.random() - 0.5) * 15;
+      const y = Math.random() * 8 + 2;
+      const z = (Math.random() - 0.5) * 15;
+      const color = colors[i % colors.length];
+      const size = Math.random() * 0.8 + 0.5;
+      
       temp.push({
-        position: [(Math.random() - 0.5) * 15, (Math.random() - 0.5) * 10, (Math.random() - 0.5) * 15],
-        scale: Math.random() * 0.3 + 0.2,
-        life: Math.random(),
-        maxLife: Math.random() * 1.5 + 0.8,
-      })
+        position: [x, y, z],
+        color,
+        size,
+        rotationSpeed: Math.random() * 0.02 + 0.01,
+        floatSpeed: Math.random() * 0.5 + 0.5,
+        type: i % 4
+      });
     }
-    return temp
-  }, [])
-
-  useFrame((state, delta) => {
-    if (explosionsRef.current) {
-      explosionsRef.current.children.forEach((explosion, i) => {
-        explosions[i].life += delta
-
-        const progress = explosions[i].life / explosions[i].maxLife
-        explosion.scale.setScalar(explosions[i].scale * (1 + progress * 3))
-        explosion.material.opacity = Math.max(0, 1 - progress)
-
-        if (explosions[i].life > explosions[i].maxLife) {
-          explosions[i].life = 0
-          explosion.position.set((Math.random() - 0.5) * 15, (Math.random() - 0.5) * 10, (Math.random() - 0.5) * 15)
-        }
-      })
-    }
-  })
-
-  return (
-    <group ref={explosionsRef}>
-      {explosions.map((explosion, i) => (
-        <mesh key={i} position={explosion.position}>
-          <sphereGeometry args={[1, 6, 6]} />
-          <meshBasicMaterial color="#ffff00" wireframe transparent />
-        </mesh>
-      ))}
-    </group>
-  )
-})
-
-const RetroHUD = React.memo(() => {
-  const crosshairRef = useRef()
+    return temp;
+  }, []);
 
   useFrame((state) => {
-    if (crosshairRef.current) {
-      crosshairRef.current.material.opacity = 0.7 + Math.sin(state.clock.elapsedTime * 4) * 0.3
+    if (groupRef.current) {
+      groupRef.current.children.forEach((child, i) => {
+        child.rotation.x += shapes[i].rotationSpeed;
+        child.rotation.y += shapes[i].rotationSpeed * 1.5;
+        child.position.y += Math.sin(state.clock.elapsedTime * shapes[i].floatSpeed) * 0.01;
+      });
     }
-  })
+  });
 
   return (
-    <group position={[0, 0, 4]}>
-      {/* Score text using simple geometry */}
-      <mesh position={[-3.5, 2.8, 0]}>
-        <planeGeometry args={[1.5, 0.3]} />
-        <meshBasicMaterial color="#00ffff" transparent opacity={0.8} />
-      </mesh>
-
-      {/* Lives indicator */}
-      <mesh position={[3.5, 2.8, 0]}>
-        <planeGeometry args={[1, 0.3]} />
-        <meshBasicMaterial color="#ff00ff" transparent opacity={0.8} />
-      </mesh>
-
-      {/* Crosshair */}
-      <mesh ref={crosshairRef}>
-        <ringGeometry args={[0.08, 0.12, 8]} />
-        <meshBasicMaterial color="#00ff00" transparent />
-      </mesh>
-
-      {/* Crosshair lines */}
-      <mesh position={[0, 0, 0.001]}>
-        <planeGeometry args={[0.3, 0.02]} />
-        <meshBasicMaterial color="#00ff00" transparent opacity={0.8} />
-      </mesh>
-      <mesh position={[0, 0, 0.001]} rotation={[0, 0, Math.PI / 2]}>
-        <planeGeometry args={[0.3, 0.02]} />
-        <meshBasicMaterial color="#00ff00" transparent opacity={0.8} />
-      </mesh>
+    <group ref={groupRef}>
+      {shapes.map((shape, i) => (
+        <mesh key={i} position={shape.position} scale={shape.size}>
+          {shape.type === 0 && <boxGeometry />}
+          {shape.type === 1 && <sphereGeometry args={[1, 8, 6]} />}
+          {shape.type === 2 && <cylinderGeometry args={[1, 1, 2, 6]} />}
+          {shape.type === 3 && <coneGeometry args={[1, 2, 4]} />}
+          <meshBasicMaterial 
+            color={shape.color} 
+            wireframe={i % 2 === 0}
+          />
+        </mesh>
+      ))}
     </group>
-  )
-})
+  );
+});
 
-const RetroParticles = React.memo(() => {
-  const particlesRef = useRef()
-
-  const particleCount = 100
-  const particles = useMemo(() => {
-    const positions = new Float32Array(particleCount * 3)
-    const velocities = new Float32Array(particleCount * 3)
-
-    for (let i = 0; i < particleCount; i++) {
-      positions[i * 3] = (Math.random() - 0.5) * 20
-      positions[i * 3 + 1] = (Math.random() - 0.5) * 15
-      positions[i * 3 + 2] = (Math.random() - 0.5) * 30 - 15
-
-      velocities[i * 3] = (Math.random() - 0.5) * 0.02
-      velocities[i * 3 + 1] = (Math.random() - 0.5) * 0.02
-      velocities[i * 3 + 2] = Math.random() * 0.1 + 0.05
+// Retro Tunnel Effect
+const RetroTunnel = React.memo(() => {
+  const groupRef = useRef();
+  
+  const rings = useMemo(() => {
+    const temp = [];
+    for (let i = 0; i < 15; i++) {
+      temp.push({
+        z: -i * 3,
+        scale: 1 + i * 0.3,
+        color: i % 2 === 0 ? '#ff00ff' : '#00ffff'
+      });
     }
+    return temp;
+  }, []);
 
-    return { positions, velocities }
-  }, [])
+  useFrame((state) => {
+    if (groupRef.current) {
+      groupRef.current.children.forEach((ring, i) => {
+        ring.position.z += 0.1;
+        if (ring.position.z > 5) {
+          ring.position.z = -40;
+        }
+        ring.rotation.z += 0.01;
+      });
+    }
+  });
 
-  useFrame((state, delta) => {
+  return (
+    <group ref={groupRef}>
+      {rings.map((ring, i) => (
+        <mesh key={i} position={[0, 0, ring.z]} scale={ring.scale}>
+          <torusGeometry args={[3, 0.1, 8, 16]} />
+          <meshBasicMaterial color={ring.color} />
+        </mesh>
+      ))}
+    </group>
+  );
+});
+
+// Neon Text
+const NeonText = React.memo(() => {
+  const textRef = useRef();
+  
+  useFrame((state) => {
+    if (textRef.current) {
+      textRef.current.position.y = Math.sin(state.clock.elapsedTime) * 0.3;
+      textRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.5) * 0.1;
+    }
+  });
+
+  return (
+    <Center ref={textRef} position={[0, 2, -5]}>
+      <mesh>
+        <textGeometry args={['SAMPARK', { font: null, size: 1, height: 0.2 }]} />
+        <meshBasicMaterial color="#ff00ff" />
+      </mesh>
+      <mesh position={[0, -1.5, 0]}>
+        <textGeometry args={['BHOL', { font: null, size: 0.8, height: 0.2 }]} />
+        <meshBasicMaterial color="#00ffff" />
+      </mesh>
+    </Center>
+  );
+});
+
+// Simple Neon Text (without font loading)
+const SimpleNeonText = React.memo(() => {
+  const textRef = useRef();
+  
+  useFrame((state) => {
+    if (textRef.current) {
+      textRef.current.position.y = Math.sin(state.clock.elapsedTime) * 0.3;
+      const glow = Math.sin(state.clock.elapsedTime * 3) * 0.5 + 1;
+      textRef.current.children.forEach(child => {
+        if (child.material) {
+          child.material.emissiveIntensity = glow;
+        }
+      });
+    }
+  });
+
+  return (
+    <group ref={textRef} position={[0, 2, -3]}>
+      {/* S */}
+      <mesh position={[-3, 0, 0]}>
+        <boxGeometry args={[0.8, 0.2, 0.2]} />
+        <meshBasicMaterial color="#ff00ff" emissive="#ff00ff" emissiveIntensity={0.5} />
+      </mesh>
+      <mesh position={[-3, 0.4, 0]}>
+        <boxGeometry args={[0.2, 0.4, 0.2]} />
+        <meshBasicMaterial color="#ff00ff" emissive="#ff00ff" emissiveIntensity={0.5} />
+      </mesh>
+      <mesh position={[-3, -0.4, 0]}>
+        <boxGeometry args={[0.2, 0.4, 0.2]} />
+        <meshBasicMaterial color="#ff00ff" emissive="#ff00ff" emissiveIntensity={0.5} />
+      </mesh>
+      
+      {/* A */}
+      <mesh position={[-1.5, 0, 0]}>
+        <boxGeometry args={[0.2, 1, 0.2]} />
+        <meshBasicMaterial color="#00ffff" emissive="#00ffff" emissiveIntensity={0.5} />
+      </mesh>
+      <mesh position={[-1, 0.4, 0]}>
+        <boxGeometry args={[0.6, 0.2, 0.2]} />
+        <meshBasicMaterial color="#00ffff" emissive="#00ffff" emissiveIntensity={0.5} />
+      </mesh>
+      <mesh position={[-0.5, 0, 0]}>
+        <boxGeometry args={[0.2, 1, 0.2]} />
+        <meshBasicMaterial color="#00ffff" emissive="#00ffff" emissiveIntensity={0.5} />
+      </mesh>
+      
+      {/* M */}
+      <mesh position={[0.5, 0, 0]}>
+        <boxGeometry args={[0.2, 1, 0.2]} />
+        <meshBasicMaterial color="#ffff00" emissive="#ffff00" emissiveIntensity={0.5} />
+      </mesh>
+      <mesh position={[1, 0.3, 0]}>
+        <boxGeometry args={[0.6, 0.2, 0.2]} />
+        <meshBasicMaterial color="#ffff00" emissive="#ffff00" emissiveIntensity={0.5} />
+      </mesh>
+      <mesh position={[1.5, 0, 0]}>
+        <boxGeometry args={[0.2, 1, 0.2]} />
+        <meshBasicMaterial color="#ffff00" emissive="#ffff00" emissiveIntensity={0.5} />
+      </mesh>
+      
+      {/* BHOL below */}
+      <group position={[0, -2, 0]}>
+        <mesh position={[-1, 0, 0]}>
+          <boxGeometry args={[0.6, 0.8, 0.2]} />
+          <meshBasicMaterial color="#ff0080" emissive="#ff0080" emissiveIntensity={0.5} />
+        </mesh>
+        <mesh position={[0, 0, 0]}>
+          <boxGeometry args={[0.2, 0.8, 0.2]} />
+          <meshBasicMaterial color="#80ff00" emissive="#80ff00" emissiveIntensity={0.5} />
+        </mesh>
+        <mesh position={[1, 0, 0]}>
+          <sphereGeometry args={[0.4, 8, 6]} />
+          <meshBasicMaterial color="#ff00ff" emissive="#ff00ff" emissiveIntensity={0.5} />
+        </mesh>
+      </group>
+    </group>
+  );
+});
+
+// Retro Particles
+const RetroParticles = React.memo(() => {
+  const particlesRef = useRef();
+  const count = 200;
+  
+  const particles = useMemo(() => {
+    const positions = new Float32Array(count * 3);
+    const colors = new Float32Array(count * 3);
+    const velocities = new Float32Array(count * 3);
+    
+    const neonColors = [
+      [1, 0, 1],    // Magenta
+      [0, 1, 1],    // Cyan
+      [1, 1, 0],    // Yellow
+      [1, 0, 0.5],  // Pink
+      [0.5, 1, 0]   // Green
+    ];
+    
+    for (let i = 0; i < count; i++) {
+      positions[i * 3] = (Math.random() - 0.5) * 20;
+      positions[i * 3 + 1] = Math.random() * 10;
+      positions[i * 3 + 2] = (Math.random() - 0.5) * 20;
+      
+      velocities[i * 3] = (Math.random() - 0.5) * 0.02;
+      velocities[i * 3 + 1] = Math.random() * 0.01;
+      velocities[i * 3 + 2] = (Math.random() - 0.5) * 0.02;
+      
+      const colorIndex = Math.floor(Math.random() * neonColors.length);
+      colors[i * 3] = neonColors[colorIndex][0];
+      colors[i * 3 + 1] = neonColors[colorIndex][1];
+      colors[i * 3 + 2] = neonColors[colorIndex][2];
+    }
+    
+    return { positions, colors, velocities };
+  }, []);
+  
+  useFrame(() => {
     if (particlesRef.current) {
-      const positions = particlesRef.current.geometry.attributes.position.array
-
-      for (let i = 0; i < particleCount; i++) {
-        const i3 = i * 3
-
-        positions[i3] += particles.velocities[i3] * delta * 60
-        positions[i3 + 1] += particles.velocities[i3 + 1] * delta * 60
-        positions[i3 + 2] += particles.velocities[i3 + 2] * delta * 60
-
-        if (positions[i3 + 2] > 10) {
-          positions[i3] = (Math.random() - 0.5) * 20
-          positions[i3 + 1] = (Math.random() - 0.5) * 15
-          positions[i3 + 2] = -15
+      const positions = particlesRef.current.geometry.attributes.position.array;
+      
+      for (let i = 0; i < count; i++) {
+        positions[i * 3] += particles.velocities[i * 3];
+        positions[i * 3 + 1] += particles.velocities[i * 3 + 1];
+        positions[i * 3 + 2] += particles.velocities[i * 3 + 2];
+        
+        // Reset particles that go too far
+        if (positions[i * 3 + 1] > 15) {
+          positions[i * 3 + 1] = -5;
         }
       }
-
-      particlesRef.current.geometry.attributes.position.needsUpdate = true
+      
+      particlesRef.current.geometry.attributes.position.needsUpdate = true;
     }
-  })
+  });
 
   return (
     <points ref={particlesRef}>
       <bufferGeometry>
-        <bufferAttribute attach="attributes-position" count={particleCount} array={particles.positions} itemSize={3} />
+        <bufferAttribute
+          attach="attributes-position"
+          count={count}
+          array={particles.positions}
+          itemSize={3}
+        />
+        <bufferAttribute
+          attach="attributes-color"
+          count={count}
+          array={particles.colors}
+          itemSize={3}
+        />
       </bufferGeometry>
-      <pointsMaterial size={0.05} color="#ffffff" transparent opacity={0.6} />
+      <pointsMaterial size={0.2} vertexColors transparent />
     </points>
-  )
-})
+  );
+});
 
 const ThreeExperience = ({ isHero = false }) => {
   return (
     <Canvas
-      camera={{ position: [0, 1, 5], fov: 75 }}
-      style={{ touchAction: "pan-y" }}
-      gl={{ antialias: false, alpha: false }}
+      camera={{ position: [0, 3, 8], fov: 75 }}
+      style={{ touchAction: 'pan-y' }}
+      gl={{ antialias: true, alpha: false }}
     >
-      <color attach="background" args={["#000022"]} />
-
-      {/* Simple lighting */}
-      <ambientLight intensity={0.2} />
-
-      {/* All game elements */}
+      <color attach="background" args={['#000011']} />
+      
+      {/* Retro Lighting */}
+      <ambientLight intensity={0.3} color="#440044" />
+      <pointLight position={[0, 10, 0]} intensity={2} color="#ff00ff" />
+      <pointLight position={[-10, 5, 5]} intensity={1.5} color="#00ffff" />
+      <pointLight position={[10, 5, 5]} intensity={1.5} color="#ffff00" />
+      
+      {/* Retro Elements */}
       <RetroGrid />
-      <Stars radius={50} depth={30} count={2000} factor={3} saturation={0} fade speed={3} />
-      <RetroSpaceship />
-      <RetroAsteroids />
-      <RetroEnemies />
-      <RetroLasers />
-      <RetroExplosions />
+      <RetroShapes />
+      <RetroTunnel />
+      <SimpleNeonText />
       <RetroParticles />
-      <RetroHUD />
+      
+      {/* Stars */}
+      <Stars
+        radius={50}
+        depth={30}
+        count={2000}
+        factor={2}
+        saturation={1}
+        fade={false}
+        speed={1}
+      />
+      
+      {/* Sparkles */}
+      <Sparkles
+        count={30}
+        scale={15}
+        size={4}
+        speed={0.8}
+        color="#ff00ff"
+      />
+      
+      <OrbitControls
+        enableZoom={true}
+        enablePan={false}
+        minDistance={5}
+        maxDistance={20}
+        autoRotate={true}
+        autoRotateSpeed={0.5}
+        minPolarAngle={Math.PI / 6}
+        maxPolarAngle={Math.PI - Math.PI / 4}
+      />
     </Canvas>
-  )
-}
+  );
+};
 
-export default ThreeExperience
+export default ThreeExperience;
