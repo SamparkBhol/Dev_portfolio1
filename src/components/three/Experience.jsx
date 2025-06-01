@@ -1,384 +1,193 @@
 import React, { useRef, useMemo, useEffect, useState, Suspense } from 'react';
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls, Stars, Text3D, Center, Sparkles } from '@react-three/drei';
-import * as THREE from 'three';
+    import { Canvas, useFrame, useThree } from '@react-three/fiber';
+    import { OrbitControls, Stars, Text3D, Center, Sparkles, Cloud, Sky, Billboard, useTexture, Environment } from '@react-three/drei';
+    import * as THREE from 'three';
+    import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
 
-// Retro Grid Floor
-const RetroGrid = React.memo(() => {
-  const gridRef = useRef();
-  
-  useFrame((state) => {
-    if (gridRef.current) {
-      gridRef.current.position.z = (state.clock.elapsedTime * 2) % 4 - 2;
-    }
-  });
-
-  const gridLines = useMemo(() => {
-    const lines = [];
-    const size = 20;
-    const divisions = 20;
-    const step = size / divisions;
-    
-    // Create grid lines
-    for (let i = 0; i <= divisions; i++) {
-      const x = -size/2 + i * step;
-      lines.push(
-        <mesh key={`v${i}`} position={[x, 0, 0]}>
-          <boxGeometry args={[0.02, 0.1, size]} />
-          <meshBasicMaterial color="#ff00ff" />
-        </mesh>
-      );
-    }
-    
-    for (let i = 0; i <= divisions; i++) {
-      const z = -size/2 + i * step;
-      lines.push(
-        <mesh key={`h${i}`} position={[0, 0, z]}>
-          <boxGeometry args={[size, 0.1, 0.02]} />
-          <meshBasicMaterial color="#ff00ff" />
-        </mesh>
-      );
-    }
-    
-    return lines;
-  }, []);
-
-  return (
-    <group ref={gridRef} position={[0, -3, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-      {gridLines}
-    </group>
-  );
-});
-
-// Floating Retro Shapes
-const RetroShapes = React.memo(() => {
-  const groupRef = useRef();
-  
-  const shapes = useMemo(() => {
-    const temp = [];
-    const colors = ['#ff00ff', '#00ffff', '#ffff00', '#ff0080', '#80ff00'];
-    
-    for (let i = 0; i < 8; i++) {
-      const x = (Math.random() - 0.5) * 15;
-      const y = Math.random() * 8 + 2;
-      const z = (Math.random() - 0.5) * 15;
-      const color = colors[i % colors.length];
-      const size = Math.random() * 0.8 + 0.5;
-      
-      temp.push({
-        position: [x, y, z],
-        color,
-        size,
-        rotationSpeed: Math.random() * 0.02 + 0.01,
-        floatSpeed: Math.random() * 0.5 + 0.5,
-        type: i % 4
+    const MovingStars = React.memo(() => {
+      const starsRef = useRef();
+      useFrame((state, delta) => {
+        if (starsRef.current) {
+          starsRef.current.rotation.x += delta * 0.005;
+          starsRef.current.rotation.y += delta * 0.01;
+        }
       });
-    }
-    return temp;
-  }, []);
-
-  useFrame((state) => {
-    if (groupRef.current) {
-      groupRef.current.children.forEach((child, i) => {
-        child.rotation.x += shapes[i].rotationSpeed;
-        child.rotation.y += shapes[i].rotationSpeed * 1.5;
-        child.position.y += Math.sin(state.clock.elapsedTime * shapes[i].floatSpeed) * 0.01;
+      return <Stars ref={starsRef} radius={200} depth={50} count={10000} factor={4} saturation={0} fade speed={0.7} />;
+    });
+    
+    const NameText = React.memo(() => {
+      const fontUrl = "/fonts/Orbitron_Bold.json"; 
+      const textRef = useRef();
+      useFrame(({ clock }) => {
+        if(textRef.current) {
+          textRef.current.position.y = Math.sin(clock.getElapsedTime() * 0.5) * 0.2;
+        }
       });
-    }
-  });
 
-  return (
-    <group ref={groupRef}>
-      {shapes.map((shape, i) => (
-        <mesh key={i} position={shape.position} scale={shape.size}>
-          {shape.type === 0 && <boxGeometry />}
-          {shape.type === 1 && <sphereGeometry args={[1, 8, 6]} />}
-          {shape.type === 2 && <cylinderGeometry args={[1, 1, 2, 6]} />}
-          {shape.type === 3 && <coneGeometry args={[1, 2, 4]} />}
-          <meshBasicMaterial 
-            color={shape.color} 
-            wireframe={i % 2 === 0}
+      return (
+        <Suspense fallback={null}>
+          <Center ref={textRef} position={[0,0,-2]}>
+            <Text3D font={fontUrl} size={1} height={0.2} curveSegments={12} bevelEnabled bevelThickness={0.02} bevelSize={0.02} bevelOffset={0} bevelSegments={5}>
+              SAMPARK
+              <meshStandardMaterial name="name_material" color="#c084fc" emissive="#7e22ce" emissiveIntensity={0.8} metalness={0.9} roughness={0.1} />
+            </Text3D>
+            <Text3D font={fontUrl} position={[0, -1, 0]} size={0.9} height={0.2} curveSegments={12} bevelEnabled bevelThickness={0.02} bevelSize={0.02} bevelOffset={0} bevelSegments={5}>
+              BHOL
+              <meshStandardMaterial name="name_material_bhol" color="#f9a8d4" emissive="#e11d48" emissiveIntensity={0.7} metalness={0.8} roughness={0.2} />
+            </Text3D>
+          </Center>
+        </Suspense>
+      );
+    });
+
+    const FloatingAbstractShapes = React.memo(() => {
+        const groupRef = useRef();
+        const { viewport } = useThree();
+        const shapes = useMemo(() => {
+            const temp = [];
+            const geometries = [
+                new THREE.IcosahedronGeometry(1, 0), 
+                new THREE.TorusKnotGeometry(0.8, 0.25, 100, 16), 
+                new THREE.OctahedronGeometry(1, 0), 
+                new THREE.DodecahedronGeometry(1,0) 
+            ];
+            const materials = [
+                new THREE.MeshPhysicalMaterial({ color: '#8b5cf6', metalness: 0.8, roughness: 0.1, transmission: 0.5, thickness: 0.5, transparent:true, opacity: 0.8 }),
+                new THREE.MeshPhysicalMaterial({ color: '#ec4899', metalness: 0.7, roughness: 0.2, transmission: 0.4, thickness: 0.4, transparent:true, opacity: 0.85 }),
+                new THREE.MeshPhysicalMaterial({ color: '#10b981', metalness: 0.9, roughness: 0.05, transmission: 0.6, thickness: 0.6, transparent:true, opacity: 0.75 }),
+                new THREE.MeshPhysicalMaterial({ color: '#f59e0b', metalness: 0.6, roughness: 0.3, transmission: 0.3, thickness: 0.3, transparent:true, opacity: 0.9 }),
+            ];
+
+            for (let i = 0; i < 15; i++) {
+                const geometry = geometries[i % geometries.length];
+                const material = materials[i % materials.length].clone();
+                const mesh = new THREE.Mesh(geometry, material);
+                
+                mesh.position.set(
+                    (Math.random() - 0.5) * viewport.width * 1.5,
+                    (Math.random() - 0.5) * viewport.height * 1.5,
+                    (Math.random() - 0.5) * 20 - 10 
+                );
+                mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+                const scale = Math.random() * 0.3 + 0.2;
+                mesh.scale.set(scale, scale, scale);
+                mesh.userData = { randomFactor: Math.random() * 0.5 + 0.1 };
+                temp.push(mesh);
+            }
+            return temp;
+        }, [viewport]);
+
+        useFrame((state, delta) => {
+            if (groupRef.current) {
+                groupRef.current.rotation.y += delta * 0.05;
+                groupRef.current.children.forEach(child => {
+                    child.rotation.x += delta * 0.1 * child.userData.randomFactor;
+                    child.rotation.y += delta * 0.15 * child.userData.randomFactor;
+                    child.position.y += Math.sin(state.clock.elapsedTime * child.userData.randomFactor) * delta * 0.5;
+                });
+            }
+        });
+        return <group ref={groupRef}>{shapes.map((shape, i) => <primitive key={i} object={shape} />)}</group>;
+    });
+    
+    const BackgroundGameVisuals = React.memo(() => {
+      const count = 50;
+      const particles = useMemo(() => {
+        const temp = [];
+        for (let i = 0; i < count; i++) {
+          temp.push({
+            position: [ (Math.random() - 0.5) * 30, (Math.random() - 0.5) * 20, (Math.random() - 0.5) * 30 - 20],
+            scale: Math.random() * 0.1 + 0.05,
+            speed: Math.random() * 0.02 + 0.01,
+            color: new THREE.Color().setHSL(Math.random(), 0.7, 0.7)
+          });
+        }
+        return temp;
+      }, []);
+
+      const groupRef = useRef();
+      useFrame((state, delta) => {
+        if(groupRef.current) {
+            groupRef.current.children.forEach((mesh, i) => {
+                mesh.position.y -= particles[i].speed;
+                if (mesh.position.y < -10) {
+                    mesh.position.y = 10;
+                }
+                mesh.rotation.x += delta * 0.1;
+                mesh.rotation.y += delta * 0.1;
+            });
+        }
+      });
+
+      return (
+        <group ref={groupRef}>
+          {particles.map((particle, i) => (
+            <mesh key={i} position={particle.position} scale={particle.scale}>
+              <boxGeometry />
+              <meshStandardMaterial color={particle.color} emissive={particle.color} emissiveIntensity={0.3} transparent opacity={0.6} />
+            </mesh>
+          ))}
+        </group>
+      );
+    });
+
+    const VolumetricClouds = React.memo(() => {
+      return (
+        <>
+          <Cloud position={[-10, -6, -25]} speed={0.2} opacity={0.15} segments={20} depthTest={false} scale={1.2} color="#4a044e" />
+          <Cloud position={[10, -8, -30]} speed={0.2} opacity={0.1} segments={30} depthTest={false} scale={1.8} color="#2c114f"/>
+          <Cloud position={[0, 10, -35]} speed={0.1} opacity={0.12} segments={15} depthTest={false} scale={1.5} color="#1e1b4b" />
+        </>
+      );
+    });
+
+
+    const ThreeExperience = ({ isHero = false }) => {
+      const [fontLoaded, setFontLoaded] = useState(false);
+      useEffect(() => {
+        const loader = new FontLoader();
+        loader.load("/fonts/Orbitron_Bold.json", (font) => {
+          THREE.Cache.add("/fonts/Orbitron_Bold.json", font);
+          setFontLoaded(true);
+        });
+      }, []);
+
+
+      return (
+        <Canvas 
+            camera={{ position: [0, 0, isHero ? 8 : 15], fov: isHero ? 60 : 50 }} 
+            style={{ touchAction: 'pan-y' }}
+            gl={{ antialias: true, alpha: false }} 
+        >
+          {isHero ? (
+            <color attach="background" args={['#0c0a09']} />
+          ) : (
+            <color attach="background" args={['#1f2937']} />
+          )}
+
+          <ambientLight intensity={isHero ? 0.6 : 0.4} />
+          <pointLight position={[10, 15, 10]} intensity={isHero ? 1.5 : 0.8} decay={1.5} distance={60} color="#e9d5ff"/>
+          <pointLight position={[-10, -5, -15]} intensity={isHero ? 0.8 : 0.4} color="#fbcfe8" decay={1.8} distance={50}/>
+          <directionalLight position={[0, 10, 5]} intensity={isHero ? 0.9 : 0.5} color="#a5f3fc" />
+          
+          {isHero && fontLoaded && <NameText />}
+          {isHero && <FloatingAbstractShapes />}
+          <MovingStars />
+          <Sparkles count={isHero ? 150 : 50} scale={isHero ? 7 : 10} size={isHero ? 4 : 5} speed={0.4} noise={0.15} color={isHero ? "#fda4af" : "#a78bfa"} />
+          {!isHero && <BackgroundGameVisuals />}
+          {isHero && <VolumetricClouds />}
+          
+          <OrbitControls 
+            enableZoom={true} 
+            enablePan={false} 
+            minDistance={isHero ? 3 : 10} 
+            maxDistance={isHero ? 18 : 30} 
+            autoRotate={isHero} 
+            autoRotateSpeed={isHero ? 0.2 : 0.1}
+            minPolarAngle={Math.PI / 5}
+            maxPolarAngle={Math.PI - Math.PI / 5}
           />
-        </mesh>
-      ))}
-    </group>
-  );
-});
-
-// Retro Tunnel Effect
-const RetroTunnel = React.memo(() => {
-  const groupRef = useRef();
-  
-  const rings = useMemo(() => {
-    const temp = [];
-    for (let i = 0; i < 15; i++) {
-      temp.push({
-        z: -i * 3,
-        scale: 1 + i * 0.3,
-        color: i % 2 === 0 ? '#ff00ff' : '#00ffff'
-      });
-    }
-    return temp;
-  }, []);
-
-  useFrame((state) => {
-    if (groupRef.current) {
-      groupRef.current.children.forEach((ring, i) => {
-        ring.position.z += 0.1;
-        if (ring.position.z > 5) {
-          ring.position.z = -40;
-        }
-        ring.rotation.z += 0.01;
-      });
-    }
-  });
-
-  return (
-    <group ref={groupRef}>
-      {rings.map((ring, i) => (
-        <mesh key={i} position={[0, 0, ring.z]} scale={ring.scale}>
-          <torusGeometry args={[3, 0.1, 8, 16]} />
-          <meshBasicMaterial color={ring.color} />
-        </mesh>
-      ))}
-    </group>
-  );
-});
-
-// Neon Text
-const NeonText = React.memo(() => {
-  const textRef = useRef();
-  
-  useFrame((state) => {
-    if (textRef.current) {
-      textRef.current.position.y = Math.sin(state.clock.elapsedTime) * 0.3;
-      textRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.5) * 0.1;
-    }
-  });
-
-  return (
-    <Center ref={textRef} position={[0, 2, -5]}>
-      <mesh>
-        <textGeometry args={['SAMPARK', { font: null, size: 1, height: 0.2 }]} />
-        <meshBasicMaterial color="#ff00ff" />
-      </mesh>
-      <mesh position={[0, -1.5, 0]}>
-        <textGeometry args={['BHOL', { font: null, size: 0.8, height: 0.2 }]} />
-        <meshBasicMaterial color="#00ffff" />
-      </mesh>
-    </Center>
-  );
-});
-
-// Simple Neon Text (without font loading)
-const SimpleNeonText = React.memo(() => {
-  const textRef = useRef();
-  
-  useFrame((state) => {
-    if (textRef.current) {
-      textRef.current.position.y = Math.sin(state.clock.elapsedTime) * 0.3;
-      const glow = Math.sin(state.clock.elapsedTime * 3) * 0.5 + 1;
-      textRef.current.children.forEach(child => {
-        if (child.material) {
-          child.material.emissiveIntensity = glow;
-        }
-      });
-    }
-  });
-
-  return (
-    <group ref={textRef} position={[0, 2, -3]}>
-      {/* S */}
-      <mesh position={[-3, 0, 0]}>
-        <boxGeometry args={[0.8, 0.2, 0.2]} />
-        <meshBasicMaterial color="#ff00ff" emissive="#ff00ff" emissiveIntensity={0.5} />
-      </mesh>
-      <mesh position={[-3, 0.4, 0]}>
-        <boxGeometry args={[0.2, 0.4, 0.2]} />
-        <meshBasicMaterial color="#ff00ff" emissive="#ff00ff" emissiveIntensity={0.5} />
-      </mesh>
-      <mesh position={[-3, -0.4, 0]}>
-        <boxGeometry args={[0.2, 0.4, 0.2]} />
-        <meshBasicMaterial color="#ff00ff" emissive="#ff00ff" emissiveIntensity={0.5} />
-      </mesh>
-      
-      {/* A */}
-      <mesh position={[-1.5, 0, 0]}>
-        <boxGeometry args={[0.2, 1, 0.2]} />
-        <meshBasicMaterial color="#00ffff" emissive="#00ffff" emissiveIntensity={0.5} />
-      </mesh>
-      <mesh position={[-1, 0.4, 0]}>
-        <boxGeometry args={[0.6, 0.2, 0.2]} />
-        <meshBasicMaterial color="#00ffff" emissive="#00ffff" emissiveIntensity={0.5} />
-      </mesh>
-      <mesh position={[-0.5, 0, 0]}>
-        <boxGeometry args={[0.2, 1, 0.2]} />
-        <meshBasicMaterial color="#00ffff" emissive="#00ffff" emissiveIntensity={0.5} />
-      </mesh>
-      
-      {/* M */}
-      <mesh position={[0.5, 0, 0]}>
-        <boxGeometry args={[0.2, 1, 0.2]} />
-        <meshBasicMaterial color="#ffff00" emissive="#ffff00" emissiveIntensity={0.5} />
-      </mesh>
-      <mesh position={[1, 0.3, 0]}>
-        <boxGeometry args={[0.6, 0.2, 0.2]} />
-        <meshBasicMaterial color="#ffff00" emissive="#ffff00" emissiveIntensity={0.5} />
-      </mesh>
-      <mesh position={[1.5, 0, 0]}>
-        <boxGeometry args={[0.2, 1, 0.2]} />
-        <meshBasicMaterial color="#ffff00" emissive="#ffff00" emissiveIntensity={0.5} />
-      </mesh>
-      
-      {/* BHOL below */}
-      <group position={[0, -2, 0]}>
-        <mesh position={[-1, 0, 0]}>
-          <boxGeometry args={[0.6, 0.8, 0.2]} />
-          <meshBasicMaterial color="#ff0080" emissive="#ff0080" emissiveIntensity={0.5} />
-        </mesh>
-        <mesh position={[0, 0, 0]}>
-          <boxGeometry args={[0.2, 0.8, 0.2]} />
-          <meshBasicMaterial color="#80ff00" emissive="#80ff00" emissiveIntensity={0.5} />
-        </mesh>
-        <mesh position={[1, 0, 0]}>
-          <sphereGeometry args={[0.4, 8, 6]} />
-          <meshBasicMaterial color="#ff00ff" emissive="#ff00ff" emissiveIntensity={0.5} />
-        </mesh>
-      </group>
-    </group>
-  );
-});
-
-// Retro Particles
-const RetroParticles = React.memo(() => {
-  const particlesRef = useRef();
-  const count = 200;
-  
-  const particles = useMemo(() => {
-    const positions = new Float32Array(count * 3);
-    const colors = new Float32Array(count * 3);
-    const velocities = new Float32Array(count * 3);
-    
-    const neonColors = [
-      [1, 0, 1],    // Magenta
-      [0, 1, 1],    // Cyan
-      [1, 1, 0],    // Yellow
-      [1, 0, 0.5],  // Pink
-      [0.5, 1, 0]   // Green
-    ];
-    
-    for (let i = 0; i < count; i++) {
-      positions[i * 3] = (Math.random() - 0.5) * 20;
-      positions[i * 3 + 1] = Math.random() * 10;
-      positions[i * 3 + 2] = (Math.random() - 0.5) * 20;
-      
-      velocities[i * 3] = (Math.random() - 0.5) * 0.02;
-      velocities[i * 3 + 1] = Math.random() * 0.01;
-      velocities[i * 3 + 2] = (Math.random() - 0.5) * 0.02;
-      
-      const colorIndex = Math.floor(Math.random() * neonColors.length);
-      colors[i * 3] = neonColors[colorIndex][0];
-      colors[i * 3 + 1] = neonColors[colorIndex][1];
-      colors[i * 3 + 2] = neonColors[colorIndex][2];
-    }
-    
-    return { positions, colors, velocities };
-  }, []);
-  
-  useFrame(() => {
-    if (particlesRef.current) {
-      const positions = particlesRef.current.geometry.attributes.position.array;
-      
-      for (let i = 0; i < count; i++) {
-        positions[i * 3] += particles.velocities[i * 3];
-        positions[i * 3 + 1] += particles.velocities[i * 3 + 1];
-        positions[i * 3 + 2] += particles.velocities[i * 3 + 2];
-        
-        // Reset particles that go too far
-        if (positions[i * 3 + 1] > 15) {
-          positions[i * 3 + 1] = -5;
-        }
-      }
-      
-      particlesRef.current.geometry.attributes.position.needsUpdate = true;
-    }
-  });
-
-  return (
-    <points ref={particlesRef}>
-      <bufferGeometry>
-        <bufferAttribute
-          attach="attributes-position"
-          count={count}
-          array={particles.positions}
-          itemSize={3}
-        />
-        <bufferAttribute
-          attach="attributes-color"
-          count={count}
-          array={particles.colors}
-          itemSize={3}
-        />
-      </bufferGeometry>
-      <pointsMaterial size={0.2} vertexColors transparent />
-    </points>
-  );
-});
-
-const ThreeExperience = ({ isHero = false }) => {
-  return (
-    <Canvas
-      camera={{ position: [0, 3, 8], fov: 75 }}
-      style={{ touchAction: 'pan-y' }}
-      gl={{ antialias: true, alpha: false }}
-    >
-      <color attach="background" args={['#000011']} />
-      
-      {/* Retro Lighting */}
-      <ambientLight intensity={0.3} color="#440044" />
-      <pointLight position={[0, 10, 0]} intensity={2} color="#ff00ff" />
-      <pointLight position={[-10, 5, 5]} intensity={1.5} color="#00ffff" />
-      <pointLight position={[10, 5, 5]} intensity={1.5} color="#ffff00" />
-      
-      {/* Retro Elements */}
-      <RetroGrid />
-      <RetroShapes />
-      <RetroTunnel />
-      <SimpleNeonText />
-      <RetroParticles />
-      
-      {/* Stars */}
-      <Stars
-        radius={50}
-        depth={30}
-        count={2000}
-        factor={2}
-        saturation={1}
-        fade={false}
-        speed={1}
-      />
-      
-      {/* Sparkles */}
-      <Sparkles
-        count={30}
-        scale={15}
-        size={4}
-        speed={0.8}
-        color="#ff00ff"
-      />
-      
-      <OrbitControls
-        enableZoom={true}
-        enablePan={false}
-        minDistance={5}
-        maxDistance={20}
-        autoRotate={true}
-        autoRotateSpeed={0.5}
-        minPolarAngle={Math.PI / 6}
-        maxPolarAngle={Math.PI - Math.PI / 4}
-      />
-    </Canvas>
-  );
-};
-
-export default ThreeExperience;
+        </Canvas>
+      );
+    };
+    export default ThreeExperience;
