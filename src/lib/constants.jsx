@@ -25,7 +25,7 @@ import React from 'react';
         'Computer science and software developer student',
         'crafting immersive worlds',
         'intelligent systems',
-        'undefined.'
+        'Exploring undefined.'
       ],
       email: 'samparkaccess1234@mail.com',
       phone: '+91-9938048383',
