@@ -71,9 +71,9 @@ import React from 'react';
 
     export const projects = [
       {
-        title: 'CodeCraze',
-        description: 'Engineered a platform integrating NLP and programming using BERT and Transformers for natural language command processing. Implemented scalable code execution playground with real-time optimization and syntax highlighting via Flask backend. Designed intuitive interfaces focused on developer experience and system reliability, ensuring high availability.',
-        tech: ['Python', 'Flask', 'BERT', 'Transformers', 'NLP', 'JavaScript'],
+        title: 'HyDe NLP',
+        description: ' HyDE leverages a Large Language Model (LLM) to generate a hypothetical document from the user's query. The generated document reflects an ideal answer or context relevant to the query — even though it doesn't actually exist in the corpus. The system then encodes this hypothetical document into an embedding, and uses it to retrieve real documents from a target corpus using vector similarity search while eliminating the need for labeled training data (zero-shot).',
+        tech(tentative): ['Python', 'Sentence Transformers or FAISS', 'FastAPI or Flask ', 'Hugging Face Transformers', 'LangChain', 'React'],
         link: 'https://github.com/SamparkBhol/CodeCraze',
         icon: <Code className="w-8 h-8 text-blue-400" />
       },
